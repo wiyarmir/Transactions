@@ -1,12 +1,35 @@
 package es.guillermoorellana.transactions;
 
+import java.text.NumberFormat;
+import java.util.Currency;
+
 public class Transaction {
-    public String sku;
-    public String currency;
-    public float amount;
+    protected String sku;
+    protected String currency;
+    protected float amount;
 
     @Override
     public String toString() {
-        return String.format("%.2f %s", amount, currency);
+        NumberFormat nf = NumberFormat.getCurrencyInstance();
+        nf.setCurrency(Currency.getInstance(currency));
+        return nf.format(amount);
+    }
+
+    public Transaction(String sku, String currency, float amount) {
+        this.sku = sku;
+        this.currency = currency;
+        this.amount = amount;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public float getAmount() {
+        return amount;
     }
 }

@@ -11,8 +11,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -58,7 +62,9 @@ public class TransactionsActivity extends AppCompatActivity {
 
             @Override
             public void onCompleted() {
-                textView.setText(String.format("Total: %.2f %s", sum, PRESENTATION_CURRENCY));
+                NumberFormat nf = NumberFormat.getCurrencyInstance();
+                nf.setCurrency(Currency.getInstance(PRESENTATION_CURRENCY));
+                textView.setText("Total: " + nf.format(sum));
                 adapter.addAll(list);
             }
 
@@ -104,13 +110,11 @@ public class TransactionsActivity extends AppCompatActivity {
                 .map(new Func1<Transaction, ConvertedTransaction>() {
                     @Override
                     public ConvertedTransaction call(Transaction transaction) {
-                        ConvertedTransaction ct = new ConvertedTransaction();
-                        ct.sku = transaction.sku;
-                        ct.originalCurrency = transaction.currency;
-                        ct.originalAmount = transaction.amount;
-                        ct.currency = PRESENTATION_CURRENCY;
-                        ct.amount = rateConverter.convert(transaction.currency, PRESENTATION_CURRENCY, transaction.amount);
-                        return ct;
+                        return new ConvertedTransaction(transaction.getSku(),
+                                PRESENTATION_CURRENCY,
+                                rateConverter.convert(transaction.getCurrency(), PRESENTATION_CURRENCY, transaction.getAmount()),
+                                transaction.getCurrency(),
+                                transaction.getAmount());
                     }
                 });
     }
@@ -142,9 +146,8 @@ public class TransactionsActivity extends AppCompatActivity {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            ConvertedTransaction item = getItem(position);
-            viewHolder.text1.setText(String.format("%.2f %s", item.amount, item.currency));
-            viewHolder.text2.setText(String.format("%.2f %s", item.originalAmount, item.originalCurrency));
+            viewHolder.text1.setText(getItem(position).toString());
+            viewHolder.text2.setText(getItem(position).toOriginalString());
 
             return view;
         }
