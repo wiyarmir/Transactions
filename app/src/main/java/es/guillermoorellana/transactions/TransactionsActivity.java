@@ -1,21 +1,18 @@
 package es.guillermoorellana.transactions;
 
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.google.gson.Gson;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class TransactionsActivity extends AppCompatActivity {
 
@@ -32,32 +29,22 @@ public class TransactionsActivity extends AppCompatActivity {
 
         getSupportActionBar().setTitle("Transactions for " + sku);
 
-        new TransactionsTask().execute(sku);
-    }
-
-    public class TransactionsTask extends AsyncTask<String, Void, List<Transaction>> {
-        @Override
-        protected List<Transaction> doInBackground(String... params) {
-            List<Transaction> trList = DataRepository.getTransactionList();
-            return TransactionsAggregator.transactionsForSku(sku, trList);
-        }
-
-        @Override
-        protected void onPostExecute(List<Transaction> transactionList) {
-            runOnUiThread(new PopulateListRunnable(transactionList));
-        }
-    }
-
-    private class PopulateListRunnable implements Runnable {
-        private final List<Transaction> transactions;
-
-        public PopulateListRunnable(List<Transaction> transactionList) {
-            transactions = transactionList;
-        }
-
-        @Override
-        public void run() {
-            listView.setAdapter(new ArrayAdapter<>(getApplicationContext(), R.layout.item_product, transactions));
-        }
+        DataRepository.getTransactions()
+                .filter(new Func1<Transaction, Boolean>() {
+                    @Override
+                    public Boolean call(Transaction transaction) {
+                        return transaction.sku.equals(sku);
+                    }
+                })
+                .toList()
+                .doOnNext(new Action1<List<Transaction>>() {
+                    @Override
+                    public void call(List<Transaction> transactionList) {
+                        listView.setAdapter(new ArrayAdapter<>(getApplicationContext(), R.layout.item_product, transactionList));
+                    }
+                })
+                .observeOn(Schedulers.io())
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe();
     }
 }

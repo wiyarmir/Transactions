@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
+import rx.Observable;
+
 public class DataRepository {
     private static Gson gson = new Gson();
     private static String basePath = "1/";
@@ -31,5 +33,13 @@ public class DataRepository {
             e.printStackTrace();
         }
         return Arrays.asList(new Rate[]{});
+    }
+
+    public static Observable<Transaction> getTransactions() {
+        return Observable.from(getTransactionList());
+    }
+
+    public static Observable<Rate> getRates() {
+        return Observable.from(getRateList());
     }
 }

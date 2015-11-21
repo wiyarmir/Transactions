@@ -1,23 +1,23 @@
 package es.guillermoorellana.transactions;
 
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.google.gson.Gson;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnItemClick;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.observables.GroupedObservable;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,39 +29,36 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        new TransactionTask().execute();
+        DataRepository.getTransactions()
+                .groupBy(new Func1<Transaction, String>() {
+                    @Override
+                    public String call(Transaction transaction) {
+                        return transaction.sku;
+                    }
+                })
+                .flatMap(new Func1<GroupedObservable<String, Transaction>, Observable<Product>>() {
+                    @Override
+                    public Observable<Product> call(final GroupedObservable<String, Transaction> grouped) {
+                        return grouped.count().map(new Func1<Integer, Product>() {
+                            @Override
+                            public Product call(Integer integer) {
+                                return new Product(grouped.getKey(), integer);
+                            }
+                        });
+                    }
+                })
+                .toList()
+                .doOnNext(new Action1<List<Product>>() {
+                    @Override
+                    public void call(List<Product> products) {
+                        listView.setAdapter(new ArrayAdapter<>(getApplicationContext(), R.layout.item_product, products));
+                    }
+                })
+                .observeOn(Schedulers.io())
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe();
     }
 
-    public class TransactionTask extends AsyncTask<Void, Void, List<Product>> {
-        @Override
-        protected List<Product> doInBackground(Void... params) {
-            List<Transaction> trList = DataRepository.getTransactionList();
-            return TransactionsAggregator.productsFromTransactions(trList);
-        }
-
-        @Override
-        protected void onPostExecute(List<Product> products) {
-            runOnUiThread(new PopulateListRunnable(products));
-        }
-    }
-
-    public class PopulateListRunnable implements Runnable {
-        private final List<Product> list;
-
-        public PopulateListRunnable(List<Product> products) {
-            list = products;
-        }
-
-        @Override
-        public void run() {
-            ArrayAdapter<Product> adapter = new ArrayAdapter<>(
-                    getApplicationContext(),
-                    R.layout.item_product,
-                    list
-            );
-            listView.setAdapter(adapter);
-        }
-    }
 
     @OnItemClick(R.id.list)
     public void onListItemClick(int position, AdapterView<ArrayAdapter<Product>> adapterView) {
