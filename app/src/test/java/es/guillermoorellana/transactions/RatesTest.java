@@ -28,4 +28,11 @@ public class RatesTest {
         return Arrays.asList(array);
     }
 
+    @Test
+    public void testConversion() {
+        RateConverter converter = new RateConverter(getRateList());
+        System.out.println(converter.convert("USD", "GBP", 1)); // direct
+        System.out.println(converter.convert("CAD", "GBP", 1)); // one jump
+        System.out.println(converter.convert("CAD", "AUD", 1)); // two jumps
+    }
 }
