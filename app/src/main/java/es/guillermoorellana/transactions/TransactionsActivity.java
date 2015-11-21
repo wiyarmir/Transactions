@@ -119,7 +119,6 @@ public class TransactionsActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view;
-            TextView text;
             ViewHolder viewHolder;
             if (convertView == null) {
                 view = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, parent, false);
