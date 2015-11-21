@@ -8,4 +8,9 @@ public class Product {
         this.sku = sku;
         this.nTransactions = nTransactions;
     }
+
+    @Override
+    public String toString() {
+        return sku + ": " + nTransactions;
+    }
 }
