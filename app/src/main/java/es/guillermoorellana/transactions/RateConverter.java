@@ -36,6 +36,9 @@ public class RateConverter {
     }
 
     public float convert(String from, String to, float amount) {
+        if (from.equals(to)) {
+            return amount;
+        }
         if (!conversionTree.containsKey(from)) {
             throw new UnsupportedOperationException();
         }
