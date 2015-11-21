@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String EXTRA_SKU = "sku";
     @Bind(R.id.list) ListView listView;
+    @Bind(android.R.id.empty) TextView empty;
     private ProductAdapter adapter;
 
     @Override
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new ProductAdapter(this);
         listView.setAdapter(adapter);
+        listView.setEmptyView(empty);
 
         DataRepository.getTransactions()
                 .groupBy(new Func1<Transaction, String>() {

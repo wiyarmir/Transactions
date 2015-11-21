@@ -28,6 +28,7 @@ public class TransactionsActivity extends AppCompatActivity {
 
     @Bind(R.id.list) ListView listView;
     @Bind(R.id.text) TextView textView;
+    @Bind(android.R.id.empty) TextView empty;
 
     private String sku;
     private final static String PRESENTATION_CURRENCY = "GBP";
@@ -49,6 +50,7 @@ public class TransactionsActivity extends AppCompatActivity {
 
         adapter = new ConvertedTransactionAdapter(this);
         listView.setAdapter(adapter);
+        listView.setEmptyView(empty);
 
         subscriber = new Subscriber<ConvertedTransaction>() {
             private ArrayList<ConvertedTransaction> list = new ArrayList<>();
