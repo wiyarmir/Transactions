@@ -12,12 +12,17 @@ import rx.Observable;
 public class DataRepository {
     private static Gson gson = new Gson();
     private static String basePath = "1/";
+    private static List<Transaction> transactions;
+    private static List<Rate> rates;
 
     public static List<Transaction> getTransactionList() {
-        InputStreamReader in = null;
+        if (transactions != null) {
+            return transactions;
+        }
         try {
-            in = new InputStreamReader(App.getInstance().getAssets().open(basePath + "transactions.json"));
-            return Arrays.asList(gson.fromJson(in, Transaction[].class));
+            InputStreamReader in = new InputStreamReader(App.getInstance().getAssets().open(basePath + "transactions.json"));
+            transactions = Arrays.asList(gson.fromJson(in, Transaction[].class));
+            return transactions;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -25,10 +30,13 @@ public class DataRepository {
     }
 
     public static List<Rate> getRateList() {
-        InputStreamReader in = null;
+        if (rates != null) {
+            return rates;
+        }
         try {
-            in = new InputStreamReader(App.getInstance().getAssets().open(basePath + "rates.json"));
-            return Arrays.asList(gson.fromJson(in, Rate[].class));
+            InputStreamReader in = new InputStreamReader(App.getInstance().getAssets().open(basePath + "rates.json"));
+            rates = Arrays.asList(gson.fromJson(in, Rate[].class));
+            return rates;
         } catch (IOException e) {
             e.printStackTrace();
         }
