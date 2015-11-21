@@ -1,16 +1,22 @@
 package es.guillermoorellana.transactions;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
@@ -26,7 +32,8 @@ public class TransactionsActivity extends AppCompatActivity {
     private final static String PRESENTATION_CURRENCY = "GBP";
     private Observable transactionsObservable;
     private RateConverter rateConverter;
-    private float sum;
+    private ConvertedTransactionAdapter adapter;
+    private Subscriber<ConvertedTransaction> subscriber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +45,35 @@ public class TransactionsActivity extends AppCompatActivity {
 
         getSupportActionBar().setTitle("Transactions for " + sku);
 
+        adapter = new ConvertedTransactionAdapter(this);
+        listView.setAdapter(adapter);
+
+        subscriber = new Subscriber<ConvertedTransaction>() {
+            private ArrayList<ConvertedTransaction> list = new ArrayList<>();
+            private float sum;
+
+            @Override
+            public void onCompleted() {
+                textView.setText(String.format("Total: %.2f %s", sum, PRESENTATION_CURRENCY));
+                adapter.addAll(list);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onNext(ConvertedTransaction convertedTransaction) {
+                sum += convertedTransaction.amount;
+                list.add(convertedTransaction);
+            }
+        };
+
         DataRepository.getRates()
                 .toList()
+                .observeOn(Schedulers.io())
+                .subscribeOn(AndroidSchedulers.mainThread())
                 .doOnNext(new Action1<List<Rate>>() {
                     @Override
                     public void call(List<Rate> rates) {
@@ -49,11 +83,11 @@ public class TransactionsActivity extends AppCompatActivity {
                 .doOnCompleted(new Action0() {
                     @Override
                     public void call() {
-                        transactionsObservable.subscribe();
+                        transactionsObservable
+                                .subscribeOn(AndroidSchedulers.mainThread())
+                                .subscribe(subscriber);
                     }
                 })
-                .observeOn(Schedulers.io())
-                .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe();
 
         transactionsObservable = DataRepository.getTransactions()
@@ -68,32 +102,48 @@ public class TransactionsActivity extends AppCompatActivity {
                     public ConvertedTransaction call(Transaction transaction) {
                         ConvertedTransaction ct = new ConvertedTransaction();
                         ct.sku = transaction.sku;
-                        ct.amount = rateConverter.convert(transaction.currency, PRESENTATION_CURRENCY, transaction.amount);
-                        ct.originalCurrency = ct.currency;
+                        ct.originalCurrency = transaction.currency;
+                        ct.originalAmount = transaction.amount;
                         ct.currency = PRESENTATION_CURRENCY;
+                        ct.amount = rateConverter.convert(transaction.currency, PRESENTATION_CURRENCY, transaction.amount);
                         return ct;
                     }
-                })
-                .doOnNext(new Action1<ConvertedTransaction>() {
-                    @Override
-                    public void call(ConvertedTransaction convertedTransaction) {
-                        sum += convertedTransaction.amount;
-                    }
-                })
-                .toList()
-                .doOnNext(new Action1<List<ConvertedTransaction>>() {
-                    @Override
-                    public void call(List<ConvertedTransaction> transactionList) {
-                        listView.setAdapter(new ArrayAdapter<>(getApplicationContext(), R.layout.item_product, transactionList));
-                    }
-                })
-                .doOnCompleted(new Action0() {
-                    @Override
-                    public void call() {
-                        textView.setText(String.format("Total: %.2f %s", sum, PRESENTATION_CURRENCY));
-                    }
-                })
-                .observeOn(Schedulers.io())
-                .subscribeOn(AndroidSchedulers.mainThread());
+                });
+    }
+
+    public class ConvertedTransactionAdapter extends ArrayAdapter<ConvertedTransaction> {
+        public ConvertedTransactionAdapter(Context context) {
+            super(context, android.R.layout.simple_list_item_2);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view;
+            TextView text;
+            ViewHolder viewHolder;
+            if (convertView == null) {
+                view = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, parent, false);
+                viewHolder = new ViewHolder(view);
+                view.setTag(viewHolder);
+            } else {
+                view = convertView;
+                viewHolder = (ViewHolder) view.getTag();
+            }
+
+            ConvertedTransaction item = getItem(position);
+            viewHolder.text1.setText(String.format("%.2f %s", item.amount, item.currency));
+            viewHolder.text2.setText(String.format("%.2f %s", item.originalAmount, item.originalCurrency));
+
+            return view;
+        }
+
+        class ViewHolder {
+            public ViewHolder(View view) {
+                ButterKnife.bind(this, view);
+            }
+
+            @Bind(android.R.id.text1) TextView text1;
+            @Bind(android.R.id.text2) TextView text2;
+        }
     }
 }
