@@ -12,10 +12,10 @@ import java.util.Map;
  * if a node has already been visited nor attempt to use inverse conversions.
  * <p/>
  * Sacrificed readability and performance. Would improve readability using a dedicated weighed tree
- * class which would make method calls more meaningful. Would improve performance using arraymaps
- * and making an initial estimation of the array sizes needed so there would not be that many allocs
- * Would make it a bit more intelligent by keeping already visited nodes not to revisit them and
- * use invert conversions.
+ * class (or weighed graph) which would make method calls more meaningful. Would improve performance
+ * using arraymaps and making an initial estimation of the array sizes needed so there would not be
+ * that many allocs Would make it a bit more intelligent by keeping already visited nodes not to
+ * revisit them and use invert conversions (1/known conversion).
  */
 public class RateConverter {
     Map<String, Map<String, Float>> conversionTree;
