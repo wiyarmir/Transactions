@@ -38,15 +38,8 @@ public class TransactionsActivity extends AppCompatActivity {
     public class TransactionsTask extends AsyncTask<String, Void, List<Transaction>> {
         @Override
         protected List<Transaction> doInBackground(String... params) {
-            Gson gson = new Gson();
-            try {
-                InputStreamReader in = new InputStreamReader(getAssets().open("1/transactions.json"));
-                List<Transaction> trList = Arrays.asList(gson.fromJson(in, Transaction[].class));
-                return TransactionsAggregator.transactionsForSku(sku, trList);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return Arrays.asList(new Transaction[]{});
+            List<Transaction> trList = DataRepository.getTransactionList();
+            return TransactionsAggregator.transactionsForSku(sku, trList);
         }
 
         @Override
