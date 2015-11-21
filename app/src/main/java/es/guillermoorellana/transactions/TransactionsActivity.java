@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -44,6 +45,7 @@ public class TransactionsActivity extends AppCompatActivity {
         sku = getIntent().getStringExtra(MainActivity.EXTRA_SKU);
 
         getSupportActionBar().setTitle("Transactions for " + sku);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         adapter = new ConvertedTransactionAdapter(this);
         listView.setAdapter(adapter);
@@ -109,6 +111,15 @@ public class TransactionsActivity extends AppCompatActivity {
                         return ct;
                     }
                 });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public class ConvertedTransactionAdapter extends ArrayAdapter<ConvertedTransaction> {
