@@ -36,7 +36,7 @@ public class TransactionsActivity extends AppCompatActivity {
 
     private String sku;
     private final static String PRESENTATION_CURRENCY = "GBP";
-    private Observable transactionsObservable;
+    private Observable<ConvertedTransaction> transactionsObservable;
     private RateConverter rateConverter;
     private ConvertedTransactionAdapter adapter;
     private Subscriber<ConvertedTransaction> subscriber;
@@ -84,39 +84,22 @@ public class TransactionsActivity extends AppCompatActivity {
                 .toList()
                 .observeOn(Schedulers.io())
                 .subscribeOn(AndroidSchedulers.mainThread())
-                .doOnNext(new Action1<List<Rate>>() {
-                    @Override
-                    public void call(List<Rate> rates) {
-                        rateConverter = new RateConverter(rates);
-                    }
-                })
-                .doOnCompleted(new Action0() {
-                    @Override
-                    public void call() {
-                        transactionsObservable
-                                .subscribeOn(AndroidSchedulers.mainThread())
-                                .subscribe(subscriber);
-                    }
-                })
+                .doOnNext(rates -> rateConverter = new RateConverter(rates))
+                .doOnCompleted(() -> transactionsObservable
+                        .subscribeOn(AndroidSchedulers.mainThread())
+                        .subscribe(subscriber))
                 .subscribe();
 
         transactionsObservable = DataRepository.getTransactions()
-                .filter(new Func1<Transaction, Boolean>() {
-                    @Override
-                    public Boolean call(Transaction transaction) {
-                        return transaction.sku.equals(sku);
-                    }
-                })
-                .map(new Func1<Transaction, ConvertedTransaction>() {
-                    @Override
-                    public ConvertedTransaction call(Transaction transaction) {
-                        return new ConvertedTransaction(transaction.getSku(),
+                .filter(transaction -> transaction.sku.equals(sku))
+                .map(transaction -> new ConvertedTransaction(
+                                transaction.getSku(),
                                 PRESENTATION_CURRENCY,
                                 rateConverter.convert(transaction.getCurrency(), PRESENTATION_CURRENCY, transaction.getAmount()),
                                 transaction.getCurrency(),
-                                transaction.getAmount());
-                    }
-                });
+                                transaction.getAmount()
+                        )
+                );
     }
 
     @Override

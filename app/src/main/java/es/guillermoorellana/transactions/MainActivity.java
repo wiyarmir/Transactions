@@ -41,30 +41,10 @@ public class MainActivity extends AppCompatActivity {
         listView.setEmptyView(empty);
 
         DataRepository.getTransactions()
-                .groupBy(new Func1<Transaction, String>() {
-                    @Override
-                    public String call(Transaction transaction) {
-                        return transaction.sku;
-                    }
-                })
-                .flatMap(new Func1<GroupedObservable<String, Transaction>, Observable<Product>>() {
-                    @Override
-                    public Observable<Product> call(final GroupedObservable<String, Transaction> grouped) {
-                        return grouped.count().map(new Func1<Integer, Product>() {
-                            @Override
-                            public Product call(Integer integer) {
-                                return new Product(grouped.getKey(), integer);
-                            }
-                        });
-                    }
-                })
+                .groupBy(transaction -> transaction.sku)
+                .flatMap(grouped -> grouped.count().map(integer -> new Product(grouped.getKey(), integer)))
                 .toList()
-                .doOnNext(new Action1<List<Product>>() {
-                    @Override
-                    public void call(List<Product> products) {
-                        adapter.addAll(products);
-                    }
-                })
+                .doOnNext(adapter::addAll)
                 .observeOn(Schedulers.io())
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe();
