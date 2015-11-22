@@ -1,6 +1,7 @@
 package es.guillermoorellana.transactions;
 
-import java.util.HashMap;
+import android.support.v4.util.ArrayMap;
+
 import java.util.List;
 import java.util.Map;
 
@@ -21,12 +22,12 @@ public class RateConverter {
     Map<String, Map<String, Float>> conversionTree;
 
     public RateConverter(List<Rate> rateList) {
-        conversionTree = new HashMap<>();
+        conversionTree = new ArrayMap<>(rateList.size() / 2);
         // initial population of the tree
         for (Rate rate : rateList) {
             Map<String, Float> leaf;
             if (!conversionTree.containsKey(rate.from)) {
-                leaf = new HashMap<>();
+                leaf = new ArrayMap<>();
                 conversionTree.put(rate.from, leaf);
             } else {
                 leaf = conversionTree.get(rate.from);
@@ -36,23 +37,26 @@ public class RateConverter {
     }
 
     public float convert(String from, String to, float amount) {
-        if (from.equals(to)) {
+        if (from.equals(to)) { // no conversion required
             return amount;
         }
-        if (!conversionTree.containsKey(from)) {
+        if (!conversionTree.containsKey(from)) { // starting currency unknown
             throw new UnsupportedOperationException();
         }
-        Map<String, Float> fromRates = conversionTree.get(from);
-        if (fromRates.containsKey(to)) {
-            return fromRates.get(to) * amount;
-        } else {
+        Map<String, Float> knownRates = conversionTree.get(from);
+        if (knownRates.containsKey(to)) { // target currency is in our known map
+            return knownRates.get(to) * amount;
+        } else { // unknown path to target currency, must search
             int attempts = 0;
             while (attempts < conversionTree.size()) {
                 for (Map.Entry<String, Map<String, Float>> entry : conversionTree.entrySet()) {
-                    if (fromRates.containsKey(entry.getKey())
+                    if (entry.getKey().equals(from)) {
+                        continue;
+                    }
+                    if (knownRates.containsKey(entry.getKey())
                             && entry.getValue().containsKey(to)) {
-                        float combinedRate = entry.getValue().get(to) * fromRates.get(entry.getKey());
-                        fromRates.put(to, combinedRate);
+                        float combinedRate = entry.getValue().get(to) * knownRates.get(entry.getKey());
+                        knownRates.put(to, combinedRate);
                         return amount * combinedRate;
                     }
                 }

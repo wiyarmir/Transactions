@@ -1,19 +1,17 @@
 package es.guillermoorellana.transactions;
 
-import com.google.gson.Gson;
-
-import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
 
 public class RatesTest {
     @Test
     public void testConversion() {
         RateConverter converter = new RateConverter(TestDataRepository.getRateList());
-        System.out.println(converter.convert("USD", "GBP", 1)); // direct
-        System.out.println(converter.convert("CAD", "GBP", 1)); // one jump
-        System.out.println(converter.convert("CAD", "AUD", 1)); // two jumps
+        assertThat(converter.convert("USD", "USD", 1), is(equalTo(1.0f))); // own
+        assertThat(converter.convert("USD", "GBP", 1), is(equalTo(0.77f))); // direct
+        assertThat(converter.convert("CAD", "GBP", 1), is(equalTo(0.7084f))); // one jump
+        assertThat(converter.convert("CAD", "AUD", 1), is(equalTo(0.587972f))); // two jumps
     }
 }
