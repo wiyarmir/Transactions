@@ -5,6 +5,9 @@ import com.google.gson.Gson;
 import java.util.Arrays;
 import java.util.List;
 
+import es.guillermoorellana.transactions.model.Rate;
+import es.guillermoorellana.transactions.model.Transaction;
+
 public class TestDataRepository {
     private static final String rateJson = "[{\"from\":\"USD\",\"rate\":\"0.77\",\"to\":\"GBP\"},{\"from\":\"GBP\",\"rate\":\"1.3\",\"to\":\"USD\"},{\"from\":\"USD\",\"rate\":\"1.09\",\"to\":\"CAD\"},{\"from\":\"CAD\",\"rate\":\"0.92\",\"to\":\"USD\"},{\"from\":\"GBP\",\"rate\":\"0.83\",\"to\":\"AUD\"},{\"from\":\"AUD\",\"rate\":\"1.2\",\"to\":\"GBP\"}]";
     private static final Gson gson = new Gson();

@@ -5,7 +5,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
-public class RatesTest {
+public class RateConversionTest {
     @Test
     public void testConversionSelf() {
         RateConverter converter = new RateConverter(TestDataRepository.getRateList());

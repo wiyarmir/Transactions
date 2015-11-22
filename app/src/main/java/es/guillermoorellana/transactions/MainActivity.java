@@ -11,16 +11,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.List;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnItemClick;
-import rx.Observable;
+import es.guillermoorellana.transactions.io.DataRepository;
+import es.guillermoorellana.transactions.model.Product;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.observables.GroupedObservable;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setEmptyView(empty);
 
         DataRepository.getTransactions()
-                .groupBy(transaction -> transaction.sku)
+                .groupBy(transaction -> transaction.getSku())
                 .flatMap(grouped -> grouped.count().map(integer -> new Product(grouped.getKey(), integer)))
                 .toList()
                 .doOnNext(adapter::addAll)
@@ -55,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public void onListItemClick(int position, AdapterView<ArrayAdapter<Product>> adapterView) {
         Product product = (Product) adapterView.getItemAtPosition(position);
         Intent intent = new Intent(this, TransactionsActivity.class);
-        intent.putExtra(EXTRA_SKU, product.sku);
+        intent.putExtra(EXTRA_SKU, product.getSku());
         startActivity(intent);
     }
 
@@ -78,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             Product item = getItem(position);
-            viewHolder.text1.setText(item.sku);
-            viewHolder.text2.setText(item.nTransactions + " transactions");
+            viewHolder.text1.setText(item.getSku());
+            viewHolder.text2.setText(item.transactionCount() + " transactions");
 
             return view;
         }

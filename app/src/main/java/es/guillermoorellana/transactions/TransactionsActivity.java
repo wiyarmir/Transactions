@@ -3,7 +3,6 @@ package es.guillermoorellana.transactions;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,21 +10,17 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Currency;
-import java.util.List;
-import java.util.Locale;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import es.guillermoorellana.transactions.io.DataRepository;
+import es.guillermoorellana.transactions.model.ConvertedTransaction;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class TransactionsActivity extends AppCompatActivity {
@@ -75,7 +70,7 @@ public class TransactionsActivity extends AppCompatActivity {
 
             @Override
             public void onNext(ConvertedTransaction convertedTransaction) {
-                sum += convertedTransaction.amount;
+                sum += convertedTransaction.getAmount();
                 list.add(convertedTransaction);
             }
         };
@@ -91,7 +86,7 @@ public class TransactionsActivity extends AppCompatActivity {
                 .subscribe();
 
         transactionsObservable = DataRepository.getTransactions()
-                .filter(transaction -> transaction.sku.equals(sku))
+                .filter(transaction -> transaction.getSku().equals(sku))
                 .map(transaction -> new ConvertedTransaction(
                                 transaction.getSku(),
                                 PRESENTATION_CURRENCY,

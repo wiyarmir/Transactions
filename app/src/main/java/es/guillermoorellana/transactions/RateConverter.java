@@ -5,12 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import es.guillermoorellana.transactions.model.Rate;
+
 /**
  * Converts rates.
- * <p/>
+ * <p>
  * Stores conversion rates in a tree emulated by using two maps. Initially only populates it with
  * the provided input data, and lazily populates the rest as needed.
- * <p/>
+ * <p>
  * Sacrificed readability and performance. Would improve readability using a dedicated weighed tree
  * class (or weighed graph) which would make method calls more meaningful. Would improve performance
  * not using HashMaps but ArrayMaps (gives StackOverflow, must be some impl. detail of ArrayMap).
@@ -23,13 +25,13 @@ public class RateConverter {
         // initial population of the tree
         for (Rate rate : rateList) {
             Map<String, Float> leaf;
-            if (!conversionTree.containsKey(rate.from)) {
+            if (!conversionTree.containsKey(rate.getFrom())) {
                 leaf = new HashMap<>();
-                conversionTree.put(rate.from, leaf);
+                conversionTree.put(rate.getFrom(), leaf);
             } else {
-                leaf = conversionTree.get(rate.from);
+                leaf = conversionTree.get(rate.getFrom());
             }
-            leaf.put(rate.to, rate.rate);
+            leaf.put(rate.getTo(), rate.getRate());
         }
     }
 

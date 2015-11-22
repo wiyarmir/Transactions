@@ -1,4 +1,4 @@
-package es.guillermoorellana.transactions;
+package es.guillermoorellana.transactions.io;
 
 import com.google.gson.Gson;
 
@@ -7,6 +7,9 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
+import es.guillermoorellana.transactions.App;
+import es.guillermoorellana.transactions.model.Rate;
+import es.guillermoorellana.transactions.model.Transaction;
 import rx.Observable;
 
 public class DataRepository {
@@ -23,7 +26,8 @@ public class DataRepository {
             InputStreamReader in = new InputStreamReader(App.getInstance().getAssets().open(basePath + "transactions.json"));
             transactions = Arrays.asList(gson.fromJson(in, Transaction[].class));
             return transactions;
-        } catch (IOException e) {
+        } catch (IOException // error reading from assets
+                | RuntimeException e) { // bad json
             e.printStackTrace();
         }
         return Arrays.asList(new Transaction[]{});
@@ -37,7 +41,8 @@ public class DataRepository {
             InputStreamReader in = new InputStreamReader(App.getInstance().getAssets().open(basePath + "rates.json"));
             rates = Arrays.asList(gson.fromJson(in, Rate[].class));
             return rates;
-        } catch (IOException e) {
+        } catch (IOException // error reading from assets
+                | RuntimeException e) { // bad json
             e.printStackTrace();
         }
         return Arrays.asList(new Rate[]{});

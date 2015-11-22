@@ -1,4 +1,4 @@
-package es.guillermoorellana.transactions;
+package es.guillermoorellana.transactions.model;
 
 import java.text.NumberFormat;
 import java.util.Currency;
